@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Theater Equation Explorer</title>
+<style>
+:root{
+  --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  --font-mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+  --bg1:#ffffff; --bg2:#f6f8fa;
+  --t1:#1a1a1a; --t2:#57606a; --t3:#8c959f;
+  --b3:#d0d7de; --b2:#afb8c1;
+  --r-md:6px; --r-lg:10px;
+  --psi:#185fa5; --psi-bg:#e6f1fb; --psi-ink:#0c447c; --psi-bd:#b5d4f4;
+  --gam:#3b6d11; --gam-bg:#eaf3de; --gam-ink:#27500a; --gam-bd:#c0dd97;
+}
+@media(prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){
+  --bg1:#0d1117; --bg2:#161b22; --t1:#e6edf3; --t2:#8b949e; --t3:#6e7681;
+  --b3:#30363d; --b2:#21262d;
+  --psi:#4184d6; --psi-bg:#122b45; --psi-ink:#9cc7f0; --psi-bd:#1f4a72;
+  --gam:#4e9c3a; --gam-bg:#182a12; --gam-ink:#a7d68f; --gam-bd:#2f5320;
+}}
+:root[data-theme="dark"]{
+  --bg1:#0d1117; --bg2:#161b22; --t1:#e6edf3; --t2:#8b949e; --t3:#6e7681;
+  --b3:#30363d; --b2:#21262d;
+  --psi:#4184d6; --psi-bg:#122b45; --psi-ink:#9cc7f0; --psi-bd:#1f4a72;
+  --gam:#4e9c3a; --gam-bg:#182a12; --gam-ink:#a7d68f; --gam-bd:#2f5320;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);background:var(--bg1);color:var(--t1);-webkit-font-smoothing:antialiased}
+.app{max-width:900px;margin:0 auto;padding:0 16px 3rem}
+
+/* header */
+.hdr{padding:1.5rem 0 1rem;border-bottom:0.5px solid var(--b3);display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.eye{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:6px}
+.title{font-size:22px;font-weight:500;line-height:1.2;margin-bottom:4px}
+.sub{font-size:13px;color:var(--t2)}
+.lbl{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);font-weight:500}
+
+/* equation */
+.eq-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:1.5rem 0 .5rem}
+.eq{display:flex;flex-wrap:wrap;gap:5px;align-items:center;padding:.7rem .75rem;
+  background:var(--bg2);border-radius:var(--r-lg);border:0.5px solid var(--b3)}
+.mul{font-size:11px;color:var(--t3);user-select:none}
+.chip{display:inline-flex;align-items:baseline;gap:6px;padding:3px 9px;border-radius:20px;font-size:12.5px;
+  font-weight:500;cursor:pointer;border:1px solid transparent;transition:all .12s;font-family:inherit}
+.chip .cv{font-family:var(--font-mono);font-size:10.5px;opacity:.75}
+.chip-psi{background:var(--psi-bg);color:var(--psi-ink);border-color:var(--psi-bd)}
+.chip-gam{background:var(--gam-bg);color:var(--gam-ink);border-color:var(--gam-bd)}
+.chip.on{color:#fff}
+.chip.on.chip-psi{background:var(--psi);border-color:var(--psi)}
+.chip.on.chip-gam{background:var(--gam);border-color:var(--gam)}
+.chip.neutral{opacity:.55}
+.chip:hover{filter:brightness(.96)}
+
+/* result */
+.result{margin-top:1rem;border:0.5px solid var(--b3);border-radius:var(--r-lg);overflow:hidden}
+.result-main{display:flex;align-items:center;gap:1.75rem;flex-wrap:wrap;padding:1rem 1.1rem;background:var(--bg2)}
+.big{font-family:var(--font-mono);font-size:36px;font-weight:500;line-height:1}
+.kv{display:flex;flex-direction:column;gap:2px}
+.kv .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--t3)}
+.kv .v{font-family:var(--font-mono);font-size:15px;font-weight:500}
+.result-foot{padding:.65rem 1.1rem;font-size:12.5px;color:var(--t2);line-height:1.6;border-top:0.5px solid var(--b3)}
+.result-foot b{color:var(--t1);font-weight:500}
+
+/* controls */
+.bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:.85rem}
+.seg{display:inline-flex;border:0.5px solid var(--b2);border-radius:var(--r-md);overflow:hidden}
+.seg button{border:none;border-right:0.5px solid var(--b2)}
+.seg button:last-child{border-right:none}
+.btn{padding:6px 13px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;
+  border:0.5px solid var(--b2);border-radius:var(--r-md);color:var(--t2);background:var(--bg1);transition:all .12s}
+.btn:hover{background:var(--bg2);color:var(--t1)}
+.btn[aria-pressed="true"]{background:var(--t1);color:var(--bg1);border-color:var(--t1)}
+.spacer{flex:1}
+
+/* tabs */
+.tabs{display:flex;border-bottom:0.5px solid var(--b3);margin-top:1.5rem;overflow-x:auto}
+.tab{padding:8px 16px;font-size:13px;font-weight:500;cursor:pointer;color:var(--t2);background:none;border:none;
+  border-bottom:2px solid transparent;transition:all .12s;font-family:inherit;white-space:nowrap}
+.tab.active{color:var(--t1);border-bottom-color:var(--t1)}
+.tab:hover:not(.active){color:var(--t1)}
+.panel{padding:1.25rem 0}
+.panel[hidden]{display:none}
+
+/* term rows */
+.rows{border:0.5px solid var(--b3);border-radius:var(--r-md);overflow:hidden}
+.grp{padding:6px 12px;background:var(--bg2);font-size:10.5px;text-transform:uppercase;letter-spacing:.09em;
+  color:var(--t3);font-weight:500;border-bottom:0.5px solid var(--b3)}
+.grp:not(:first-child){border-top:0.5px solid var(--b3)}
+.row{display:flex;align-items:center;gap:12px;padding:7px 12px;border-bottom:0.5px solid var(--b3);transition:background .12s}
+.row:last-child{border-bottom:none}
+.row:hover{background:var(--bg2)}
+.row.sel{background:var(--bg2);box-shadow:inset 2px 0 0 var(--t1)}
+.row .sym{min-width:132px;font-size:13px;font-weight:500;cursor:help}
+.row .sym.psi{color:var(--psi)} .row .sym.gam{color:var(--gam)}
+.row .pap{min-width:56px;font-size:10px;color:var(--t3);font-family:var(--font-mono)}
+.row input[type=range]{flex:1;min-width:80px;accent-color:var(--psi);height:16px}
+.row .num{width:68px;font-family:var(--font-mono);font-size:12px;padding:3px 6px;text-align:right;
+  border-radius:var(--r-md);border:0.5px solid var(--b2);background:var(--bg1);color:var(--t1)}
+.row .rst{font-size:10px;color:var(--t3);background:none;border:none;cursor:pointer;padding:2px 4px;font-family:inherit;visibility:hidden}
+.row:hover .rst{visibility:visible}
+.row .rst:hover{color:var(--t1)}
+
+/* chart */
+svg{display:block;width:100%;height:auto;overflow:visible}
+.ax{fill:var(--t3);font-size:10px;font-family:var(--font-mono)}
+.bl{fill:var(--t2);font-size:10.5px;font-family:var(--font-mono)}
+.bs{fill:var(--t1);font-size:11.5px}
+.gl{stroke:var(--b3);stroke-width:.5}
+.zl{stroke:var(--b2);stroke-width:1}
+.mark{rx:3;ry:3;cursor:pointer}
+.mark:hover{stroke:var(--bg1);stroke-width:2}
+.tip{position:fixed;pointer-events:none;z-index:9;background:var(--bg1);color:var(--t1);border:0.5px solid var(--b2);
+  border-radius:var(--r-md);padding:8px 10px;font-size:12px;line-height:1.55;box-shadow:0 8px 24px rgba(0,0,0,.18);
+  max-width:260px;opacity:0;transition:opacity .08s}
+.tip b{display:block;font-weight:500;margin-bottom:2px}
+.tip span{color:var(--t2)}
+
+/* misc */
+.formula{font-family:var(--font-mono);font-size:12px;background:var(--bg2);padding:.7rem .85rem;border-radius:var(--r-md);
+  border:0.5px solid var(--b3);overflow-x:auto;white-space:pre-wrap;word-break:break-word;line-height:1.7}
+.note{font-size:12.5px;color:var(--t2);line-height:1.65;margin-top:1rem;max-width:74ch}
+.note b{color:var(--t1);font-weight:500}
+.hint{font-size:11.5px;color:var(--t3);line-height:1.6;margin-bottom:.7rem}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{border-bottom:0.5px solid var(--b3);padding:6px 10px;text-align:right}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+td:not(:first-child):not(:nth-child(2)){font-family:var(--font-mono)}
+th{color:var(--t3);font-weight:500;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em}
+tfoot th{color:var(--t1);font-size:12.5px;text-transform:none;letter-spacing:0;font-family:var(--font-mono)}
+.ftr{margin-top:2rem;padding-top:1rem;border-top:0.5px solid var(--b3);font-size:11.5px;color:var(--t3);line-height:1.7;max-width:80ch}
+@media(max-width:620px){
+  .title{font-size:19px} .big{font-size:30px}
+  .row{flex-wrap:wrap;gap:6px 10px} .row .sym{min-width:104px} .row input[type=range]{flex:1 1 100%;order:3}
+}
+@media(forced-colors:active){.mark{forced-color-adjust:none}.rows,.result{border:1px solid CanvasText}}
+</style></head><body>
+<div class="app">
+
+<div class="hdr"><div>
+  <div class="eye">USPTO Customer No. 221545 &middot; Guarino Industries LLC</div>
+  <div class="title">Guarino Metric Suite &mdash; Theater Equation Explorer</div>
+  <div class="sub">37-paper physics-based dimensionless framework &middot; Buckingham &pi; theorem across all warfighting domains</div>
+</div><button class="btn" id="theme" type="button">Theme</button></div>
+
+<div class="eq-head"><span class="lbl">&Psi;<sub>Theater</sub> &mdash; twenty-five terms</span>
+  <span class="lbl" style="color:var(--t3);letter-spacing:0;text-transform:none">click a term to jump to it</span></div>
+<div class="eq" id="eq"></div>
+
+<div class="result">
+  <div class="result-main">
+    <div><div class="kv"><span class="k">&Psi;Theater</span></div><div class="big" id="psi">0.158</div></div>
+    <div class="kv"><span class="k">log&#8321;&#8320;</span><span class="v" id="lg">&minus;0.801</span></div>
+    <div class="kv"><span class="k">Below 1</span><span class="v" id="nb">5</span></div>
+    <div class="kv"><span class="k">Above 1</span><span class="v" id="na">1</span></div>
+    <div class="kv"><span class="k">Regime</span><span class="v" id="band" style="font-family:var(--font-sans);font-size:13px">limited</span></div>
+  </div>
+  <div class="result-foot" id="bind"></div>
+</div>
+
+<div class="bar">
+  <div class="seg">
+    <button class="btn" type="button" data-preset="pacific" aria-pressed="true">US JADC2, Pacific</button>
+    <button class="btn" type="button" data-preset="degraded" aria-pressed="false">Degraded C2</button>
+    <button class="btn" type="button" data-preset="neutral" aria-pressed="false">Neutral</button>
+  </div>
+  <span class="spacer"></span>
+  <button class="btn" type="button" id="copy">Copy values</button>
+</div>
+
+<div class="tabs" role="tablist">
+  <button class="tab active" data-tab="set" role="tab">Set terms</button>
+  <button class="tab" data-tab="con" role="tab">Contributions</button>
+  <button class="tab" data-tab="all" role="tab">Table</button>
+  <button class="tab" data-tab="eqn" role="tab">Equation and notes</button>
+</div>
+
+<div class="panel" id="p-set">
+  <p class="hint">Hover a symbol for its definition. Drag a slider or type a value; the equation above updates as you go.</p>
+  <div class="rows" id="rows"></div>
+</div>
+
+<div class="panel" id="p-con" hidden>
+  <div class="bar" style="margin:0 0 .8rem"><button class="btn" id="nt" type="button" aria-pressed="true">Hide neutral terms</button></div>
+  <p class="hint" id="hid"></p>
+  <svg id="chart" viewBox="0 0 900 300" role="img" aria-label="Log contribution of each theater equation term"></svg>
+  <p class="note"><b>The bars are logarithmic.</b> The equation is a product, so a term's effect is additive only in the
+  log. Bar length is log&#8321;&#8320; of the term and the bars sum to log&#8321;&#8320;&nbsp;&Psi;<sub>Theater</sub>. Left of
+  the line costs, right of it adds. Blue marks &Psi; scores and green marks &Gamma; coupling coefficients, the same
+  colouring the suite uses throughout.</p>
+</div>
+
+<div class="panel" id="p-all" hidden><div id="tablewrap"></div></div>
+
+<div class="panel" id="p-eqn" hidden>
+  <div class="formula" id="formula"></div>
+  <p class="note"><b>Every term has the same elasticity.</b> In a pure product a one percent change in any term moves
+  &Psi;<sub>Theater</sub> by one percent, whatever the term's level. The ranking under Contributions is therefore not a
+  sensitivity ranking; it is a ranking of what each term is currently costing. The binding constraint is the term
+  furthest below 1, and raising it to 1 alone multiplies &Psi;<sub>Theater</sub> by the reciprocal.</p>
+  <p class="note"><b>The presets.</b> Both scenarios are the worked examples of Paper X, Table 7, which score the first
+  six terms and leave the remaining nineteen at unity. They reproduce the printed &Psi;<sub>Theater</sub> of 0.158 and
+  0.012, a ratio of 12.5 driven entirely by the C2 coefficient.</p>
+</div>
+
+<div class="ftr">Terms and their owning papers follow Paper XXXVII (GBCM); the equation is as printed in Paper X (GC2M),
+Eq. (1). &Psi;<sub>Theater</sub> is a ceiling on physical effectiveness at a declared operating point, not a forecast of
+an outcome: the Buckingham &pi; theorem supplies the dimensionless groups, and the scores built over them are a model
+specified by the author and subject to calibration. This page runs entirely offline and sends nothing anywhere.</div>
+</div>
+<div class="tip" id="tip" role="status"></div>
+
+<script>
+const T=[
+ ["ΨCA","VIII","Ground and combined arms","Combined-arms ground effectiveness: vehicle, squad and their coupling."],
+ ["ΨMission","VII","Ground and combined arms","Strategic strike chain effectiveness across platform and munition."],
+ ["ΨNaval","V","Maritime","Naval platform operational effectiveness."],
+ ["ΨUW","XXVII","Maritime","Undersea warfare effectiveness."],
+ ["ΨAL","XXIII","Maritime","Amphibious and littoral operations."],
+ ["ΨSupport","VI","Air","Air mobility and non-strike support efficiency."],
+ ["ΨAF","XXIV","Air","Air superiority and counter-air."],
+ ["ΨTF","XXII","Air","Theater and strategic fires."],
+ ["ΨLMM","XXV","Air","Loitering munitions and autonomous unmanned systems."],
+ ["ΨHW","XXX","Air","Hypersonic glide vehicles and hypersonic cruise missiles."],
+ ["ΨHL","XXXIII","Air","High-energy laser weapon effectiveness."],
+ ["ΨSpace","XI","Space and spectrum","Space domain operations."],
+ ["Γcyber","XII","Space and spectrum","Cyber and electronic warfare coupling."],
+ ["ΓStrategicCyber","XXVIII","Space and spectrum","Resilience of C2 infrastructure against pre-positioned access."],
+ ["ΓISR","XIII","Command and effects","ISR architecture: collection quality against targeting latency."],
+ ["ΓC2","X","Command and effects","C2 architecture coupling: tempo, network and integration."],
+ ["ΓJF","XXIX","Command and effects","Joint fires synchronization."],
+ ["ΓTAMD","XXXI","Defensive architecture","Theater integrated air and missile defence architecture."],
+ ["ΓCUAS","XXXII","Defensive architecture","Counter-unmanned-aircraft architecture."],
+ ["ΓCBRN","XIV","Defensive architecture","CBRN environment degradation of the force."],
+ ["Γsustain","IX","Sustainment and generation","Theater logistics sustainment coupling."],
+ ["ΓBase","XXVI","Sustainment and generation","Forward basing coupling."],
+ ["ΓReady","XXXIV","Sustainment and generation","Fleet readiness: whether the force can be fielded at all."],
+ ["ΓSurge","XXXV","Sustainment and generation","Industrial base surge capacity."],
+ ["ΓGen","XXXVI","Sustainment and generation","Force generation: trained and manned units available."]
+].map(([s,p,g,d])=>({s,p,g,d,psi:s[0]==="Ψ"}));
+const ORDER=["ΨCA","ΨMission","ΨNaval","ΨSupport","Γsustain","ΓC2","ΨSpace","Γcyber",
+ "ΓISR","ΓCBRN","ΨTF","ΨAL","ΨAF","ΨLMM","ΓBase","ΨUW","ΓStrategicCyber",
+ "ΓJF","ΨHW","ΓTAMD","ΓCUAS","ΨHL","ΓReady","ΓSurge","ΓGen"];
+const PRE={pacific:{"ΨCA":.470,"ΨMission":.850,"ΨNaval":.720,"ΨSupport":.680,"Γsustain":.345,"ΓC2":2.342},
+ degraded:{"ΨCA":.470,"ΨMission":.850,"ΨNaval":.720,"ΨSupport":.680,"Γsustain":.345,"ΓC2":.187},
+ neutral:{}};
+const V={},M={};T.forEach(t=>{V[t.s]=1;M[t.s]=t;});
+const $=i=>document.getElementById(i),f=(x,n=3)=>Number.isFinite(x)?x.toFixed(n):"—";
+const LMIN=Math.log10(.01),LMAX=Math.log10(10),esc=s=>CSS.escape(s);
+let SEL=null,HIDE=true;
+const band=p=>p===0?"zero":p<.05?"severely limited":p<.2?"limited":p<.6?"constrained":p<1?"near neutral":"amplified";
+
+function buildEq(){
+  $("eq").innerHTML=ORDER.map((s,i)=>{const t=M[s];
+    return (i?'<span class="mul">×</span>':"")+
+    `<button class="chip ${t.psi?"chip-psi":"chip-gam"}" data-s="${s}" type="button" title="${t.d}">${s}<span class="cv"></span></button>`;
+  }).join("");
+  $("eq").querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>focus(c.dataset.s)));
+}
+function buildRows(){
+  let h="";
+  [...new Set(T.map(t=>t.g))].forEach(g=>{
+    h+=`<div class="grp">${g}</div>`;
+    T.filter(t=>t.g===g).forEach(t=>{
+      h+=`<div class="row" data-s="${t.s}">
+        <span class="sym ${t.psi?"psi":"gam"}" title="${t.d}">${t.s}</span>
+        <span class="pap">${t.p}</span>
+        <input type="range" min="${LMIN}" max="${LMAX}" step=".001" aria-label="${t.s}">
+        <input type="number" class="num" min="0" max="10" step=".001" aria-label="${t.s} value">
+        <button class="rst" type="button" title="Reset to 1">reset</button></div>`;
+    });
+  });
+  $("rows").innerHTML=h;
+  $("rows").querySelectorAll(".row").forEach(el=>{
+    const s=el.dataset.s,r=el.querySelector("[type=range]"),n=el.querySelector(".num");
+    r.addEventListener("input",()=>{V[s]=Math.pow(10,+r.value);n.value=f(V[s]);SEL=s;clr();render();});
+    n.addEventListener("input",()=>{const v=Math.max(0,Math.min(10,+n.value||0));V[s]=v;
+      r.value=String(Math.log10(Math.max(.01,v)));SEL=s;clr();render();});
+    el.querySelector(".rst").addEventListener("click",()=>{V[s]=1;SEL=s;clr();sync();render();});
+  });
+}
+function focus(s){SEL=s;go("set");paint();
+  const el=document.querySelector(`.row[data-s="${esc(s)}"]`);
+  if(el){el.scrollIntoView({behavior:"smooth",block:"center"});el.querySelector(".num").focus();}}
+function clr(){document.querySelectorAll("[data-preset]").forEach(b=>b.setAttribute("aria-pressed","false"));}
+function sync(){document.querySelectorAll(".row").forEach(el=>{const v=V[el.dataset.s];
+  el.querySelector("[type=range]").value=String(Math.log10(Math.max(.01,v)));el.querySelector(".num").value=f(v);});}
+function preset(k){T.forEach(t=>V[t.s]=1);Object.entries(PRE[k]||{}).forEach(([a,b])=>V[a]=b);
+  document.querySelectorAll("[data-preset]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.preset===k)));
+  sync();render();}
+function paint(){
+  $("eq").querySelectorAll(".chip").forEach(c=>{const s=c.dataset.s,t=M[s],v=V[s];
+    c.className="chip "+(t.psi?"chip-psi":"chip-gam")+(SEL===s?" on":"")+(Math.abs(v-1)<1e-9?" neutral":"");
+    c.querySelector(".cv").textContent=f(v,2);});
+  document.querySelectorAll(".row").forEach(el=>el.classList.toggle("sel",el.dataset.s===SEL));
+}
+function render(){
+  const rows=T.map(t=>({...t,v:V[t.s]})),psi=rows.reduce((a,b)=>a*b.v,1);
+  $("psi").textContent=psi===0?"0":psi<.001?psi.toExponential(2):f(psi,psi<1?3:2);
+  $("band").textContent=band(psi);
+  $("lg").textContent=psi>0?f(Math.log10(psi),3):"−∞";
+  $("nb").textContent=rows.filter(r=>r.v<1).length;$("na").textContent=rows.filter(r=>r.v>1).length;
+  const lo=rows.slice().sort((a,b)=>a.v-b.v)[0];
+  $("bind").innerHTML=lo.v<1
+    ?`<b>Binding constraint &middot; ${lo.s}</b> at ${f(lo.v)}, Paper ${lo.p}. Raising it to 1 alone multiplies &Psi;<sub>Theater</sub> by ${f(1/lo.v,2)}, to ${f(psi/lo.v,psi/lo.v<1?3:2)}.`
+    :`<b>No term is below 1.</b> Every term is neutral or amplifying at these values.`;
+  $("formula").textContent="ΨTheater = "+ORDER.join(" × ")+"\n\n"+ORDER.map(s=>s.padEnd(17)+" = "+f(V[s])).join("\n")+
+    "\n\nΨTheater".padEnd(18)+" = "+(psi>0?f(psi,5):"0");
+  chart(rows);table(rows,psi);paint();
+}
+function chart(vals){
+  const all=vals.map(t=>({...t,L:t.v>0?Math.log10(t.v):null})).sort((a,b)=>(b.L??-99)-(a.L??-99));
+  const neu=all.filter(r=>r.L!==null&&Math.abs(r.L)<1e-9);
+  const rows=HIDE?all.filter(r=>!(r.L!==null&&Math.abs(r.L)<1e-9)):all;
+  $("hid").textContent=HIDE&&neu.length?neu.length+" term"+(neu.length===1?"":"s")+" sit at exactly 1.000 and contribute nothing: "+neu.map(r=>r.s).join(", ")+".":"";
+  const sv=$("chart");
+  if(!rows.length){sv.setAttribute("viewBox","0 0 900 36");sv.innerHTML='<text class="ax" x="4" y="20">Every term is neutral; ΨTheater = 1.</text>';return;}
+  const W=900,pl=164,pr=78,pt=6,rh=22,H=pt+rows.length*rh+30;
+  const sp=Math.max(.3,...rows.map(r=>Math.abs(r.L??0)))*1.14,x=v=>pl+((v+sp)/(2*sp))*(W-pl-pr);
+  let s="";const tk=[-sp,-sp/2,0,sp/2,sp];
+  tk.forEach(t=>s+=`<line class="gl" x1="${x(t).toFixed(1)}" y1="${pt}" x2="${x(t).toFixed(1)}" y2="${pt+rows.length*rh}"/>`);
+  s+=`<line class="zl" x1="${x(0).toFixed(1)}" y1="${pt}" x2="${x(0).toFixed(1)}" y2="${pt+rows.length*rh}"/>`;
+  rows.forEach((r,i)=>{const y=pt+i*rh,bh=12,by=y+(rh-bh)/2,col=r.psi?"var(--psi)":"var(--gam)";
+    s+=`<text class="bs" x="${pl-10}" y="${by+10}" text-anchor="end">${r.s}</text>`;
+    if(r.L===null){s+=`<text class="bl" x="${x(0)+8}" y="${by+10}">term is zero, Ψ = 0</text>`;return;}
+    if(Math.abs(r.L)>1e-9){const x0=Math.min(x(0),x(r.L)),w=Math.max(2,Math.abs(x(r.L)-x(0)));
+      s+=`<rect class="mark" data-i="${i}" x="${x0.toFixed(1)}" y="${by}" width="${w.toFixed(1)}" height="${bh}" fill="${col}"/>`;
+      const lx=r.L>0?x(r.L)+7:x(r.L)-7;
+      s+=`<text class="bl" x="${lx.toFixed(1)}" y="${by+9.5}" text-anchor="${r.L>0?"start":"end"}">${f(r.v)}</text>`;
+    }else s+=`<rect class="mark" data-i="${i}" x="${(x(0)-1).toFixed(1)}" y="${by}" width="2" height="${bh}" fill="var(--b2)"/>`;});
+  const ay=pt+rows.length*rh+16;
+  tk.forEach(t=>s+=`<text class="ax" x="${x(t).toFixed(1)}" y="${ay}" text-anchor="middle">${t>0?"+":""}${t.toFixed(2)}</text>`);
+  s+=`<text class="ax" x="${pl}" y="${ay+14}" text-anchor="start">log₁₀ contribution</text>`;
+  sv.setAttribute("viewBox",`0 0 ${W} ${H}`);sv.innerHTML=s;
+  sv.querySelectorAll("rect.mark").forEach(el=>{const r=rows[+el.dataset.i];
+    el.addEventListener("mousemove",e=>tip(e,r));
+    el.addEventListener("mouseleave",()=>$("tip").style.opacity="0");
+    el.addEventListener("click",()=>focus(r.s));});
+}
+function tip(e,r){const t=$("tip");
+  t.innerHTML=`<b>${r.s} &middot; Paper ${r.p}</b>${r.d}<span><br>value ${f(r.v)} &middot; log₁₀ ${r.L>0?"+":""}${f(r.L)}<br>${r.v<1?"costs a factor of "+f(1/r.v,2):r.v>1?"adds a factor of "+f(r.v,2):"neutral"}</span>`;
+  t.style.opacity="1";const w=t.offsetWidth,h=t.offsetHeight;
+  t.style.left=Math.min(innerWidth-w-8,e.clientX+14)+"px";t.style.top=Math.max(8,e.clientY-h-14)+"px";}
+function table(vals,psi){
+  const rows=vals.slice().sort((a,b)=>a.v-b.v);
+  $("tablewrap").innerHTML=`<table><thead><tr><th>Term</th><th>Paper</th><th>Value</th><th>log₁₀</th><th>Cost factor</th></tr></thead><tbody>`+
+   rows.map(r=>`<tr><td><span style="color:${r.psi?"var(--psi)":"var(--gam)"};font-weight:500">${r.s}</span></td><td>${r.p}</td><td>${f(r.v)}</td><td>${r.v>0?(Math.log10(r.v)>0?"+":"")+f(Math.log10(r.v)):"−∞"}</td><td>${r.v>0?f(1/r.v,2)+"×":"∞"}</td></tr>`).join("")+
+   `</tbody><tfoot><tr><th>ΨTheater</th><th></th><th>${psi>0?f(psi,4):"0"}</th><th>${psi>0?f(Math.log10(psi),3):"−∞"}</th><th></th></tr></tfoot></table>`;}
+function go(k){document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===k));
+  ["set","con","all","eqn"].forEach(n=>$("p-"+n).hidden=(n!==k));}
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>go(b.dataset.tab)));
+document.querySelectorAll("[data-preset]").forEach(b=>b.addEventListener("click",()=>preset(b.dataset.preset)));
+$("nt").addEventListener("click",()=>{HIDE=!HIDE;$("nt").setAttribute("aria-pressed",String(HIDE));
+  $("nt").textContent=HIDE?"Hide neutral terms":"Show all 25 terms";render();});
+$("copy").addEventListener("click",()=>{const t=ORDER.map(s=>s+"\t"+f(V[s])).join("\n")+"\nΨTheater\t"+f(T.reduce((a,x)=>a*V[x.s],1),5);
+  navigator.clipboard&&navigator.clipboard.writeText(t);$("copy").textContent="Copied";setTimeout(()=>$("copy").textContent="Copy values",1200);});
+$("theme").addEventListener("click",()=>{const c=document.documentElement.getAttribute("data-theme");
+  const d=c?c==="dark":matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.setAttribute("data-theme",d?"light":"dark");});
+buildEq();buildRows();preset("pacific");
+</script>
+</body></html>
